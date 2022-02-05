@@ -5,41 +5,38 @@ license:            MIT
 copyright:          2022 Sridhar Ratnakumar
 maintainer:         srid@srid.ca
 author:             Sridhar Ratnakumar
-category:           Web
+category:           Text
 
 -- TODO: Before hackage release.
 -- A short (one-line) description of the package.
--- synopsis:
+synopsis: Simple interface to commonmark-hs
 
 -- A longer description of the package.
--- description:
+description: Simple interface to parsing Markdown using commonmark-hs
 
 -- A URL where users can report bugs.
--- bug-reports:
+bug-reports: https://github.com/srid/commonmark-simple
 
 extra-source-files:
   LICENSE
   README.md
 
-executable commonmark-simple
+library
   build-depends:
     , aeson
-    , async
-    , base
-    , bytestring
+    , base                   >=4.13.0.0 && <=4.18.0.0
+    , commonmark
+    , commonmark-extensions
+    , commonmark-pandoc
     , containers
-    , data-default
-    , directory
-    , filepath
-    , lens
-    , mtl
-    , profunctors
+    , megaparsec
+    , pandoc-types
+    , parsec
+    , parser-combinators
     , relude
-    , shower
-    , text
-    , time
-    , with-utf8
+    , yaml
 
+  exposed-modules:    Commonmark.Simple
   mixins:
     base hiding (Prelude),
     relude (Relude as Prelude, Relude.Container.One),
@@ -91,6 +88,5 @@ executable commonmark-simple
     TypeOperators
     ViewPatterns
 
-  main-is:            Main.hs
   hs-source-dirs:     src
   default-language:   Haskell2010
