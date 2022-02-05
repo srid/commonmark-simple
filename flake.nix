@@ -1,5 +1,5 @@
 {
-  description = "haskell-template's description";
+  description = "commonmark-simple's description";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/554d2d8aa25b6e583575459c297ec23750adb6cb";
     flake-utils.url = "github:numtide/flake-utils";
@@ -33,7 +33,7 @@
         project = returnShellEnv:
           hp.developPackage {
             inherit returnShellEnv;
-            name = "haskell-template";
+            name = "commonmark-simple";
             root = ./.;
             withHoogle = false;
             overrides = self: super: with pkgs.haskell.lib; {
