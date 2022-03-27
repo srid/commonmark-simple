@@ -1,7 +1,7 @@
 {
   description = "commonmark-simple's description";
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/554d2d8aa25b6e583575459c297ec23750adb6cb";
+    nixpkgs.url = "github:nixos/nixpkgs/30d3d79b7d3607d56546dd2a6b49e156ba0ec634";
     flake-utils.url = "github:numtide/flake-utils";
     flake-compat = {
       url = "github:edolstra/flake-compat";
@@ -15,21 +15,6 @@
         pkgs =
           import nixpkgs { inherit system overlays; config.allowBroken = true; };
         hp = pkgs.haskellPackages; # pkgs.haskell.packages.ghc921;
-        # https://github.com/NixOS/nixpkgs/issues/140774#issuecomment-976899227
-        m1MacHsBuildTools =
-          hp.override {
-            overrides = self: super:
-              let
-                workaround140774 = hpkg: with pkgs.haskell.lib;
-                  overrideCabal hpkg (drv: {
-                    enableSeparateBinOutput = false;
-                  });
-              in
-              {
-                ghcid = workaround140774 super.ghcid;
-                ormolu = workaround140774 super.ormolu;
-              };
-          };
         project = returnShellEnv:
           hp.developPackage {
             inherit returnShellEnv;
@@ -42,12 +27,11 @@
               # Example: 
               # > NanoID = self.callCabal2nix "NanoID" inputs.NanoID { };
               # Assumes that you have the 'NanoID' flake input defined.
+              relude = self.relude_1_0_0_1;
             };
             modifier = drv:
               pkgs.haskell.lib.addBuildTools drv
-                (with (if system == "aarch64-darwin"
-                then m1MacHsBuildTools
-                else hp); [
+                (with hp; [
                   # Specify your build/dev dependencies here. 
                   cabal-fmt
                   cabal-install
