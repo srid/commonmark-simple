@@ -1,52 +1,78 @@
 {
-  description = "commonmark-simple's description";
+  description = "srid/haskell-template: Nix template for Haskell projects";
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/30d3d79b7d3607d56546dd2a6b49e156ba0ec634";
-    flake-utils.url = "github:numtide/flake-utils";
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    systems.url = "github:nix-systems/default";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    haskell-flake.url = "github:srid/haskell-flake";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
-  outputs = inputs@{ self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        overlays = [ ];
-        pkgs =
-          import nixpkgs { inherit system overlays; config.allowBroken = true; };
-        hp = pkgs.haskellPackages; # pkgs.haskell.packages.ghc921;
-        project = returnShellEnv:
-          hp.developPackage {
-            inherit returnShellEnv;
-            name = "commonmark-simple";
-            root = ./.;
-            withHoogle = false;
-            overrides = self: super: with pkgs.haskell.lib; {
-              # Use callCabal2nix to override Haskell dependencies here
-              # cf. https://tek.brick.do/K3VXJd8mEKO7
-              # Example: 
-              # > NanoID = self.callCabal2nix "NanoID" inputs.NanoID { };
-              # Assumes that you have the 'NanoID' flake input defined.
-              relude = self.relude_1_0_0_1;
-            };
-            modifier = drv:
-              pkgs.haskell.lib.addBuildTools drv
-                (with hp; [
-                  # Specify your build/dev dependencies here. 
-                  cabal-fmt
-                  cabal-install
-                  ghcid
-                  haskell-language-server
-                  ormolu
-                  pkgs.nixpkgs-fmt
-                ]);
-          };
-      in
-      {
-        # Used by `nix build` & `nix run` (prod exe)
-        defaultPackage = project false;
 
-        # Used by `nix develop` (dev shell)
-        devShell = project true;
-      });
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = import inputs.systems;
+      imports = [
+        inputs.haskell-flake.flakeModule
+        inputs.treefmt-nix.flakeModule
+      ];
+      perSystem = { self', system, lib, config, pkgs, ... }: {
+        # Our only Haskell project. You can have multiple projects, but this template
+        # has only one.
+        # See https://github.com/srid/haskell-flake/blob/master/example/flake.nix
+        haskellProjects.default = {
+          # The base package set (this value is the default)
+          # basePackages = pkgs.haskellPackages;
+
+          # Packages to add on top of `basePackages`
+          packages = { };
+
+          # Add your package overrides here
+          settings = { };
+
+          # Development shell configuration
+          devShell = {
+            hlsCheck.enable = false;
+          };
+
+          # What should haskell-flake add to flake outputs?
+          autoWire = [ "packages" "apps" "checks" ]; # Wire all but the devShell
+        };
+
+        # Auto formatters. This also adds a flake check to ensure that the
+        # source tree was auto formatted.
+        treefmt.config = {
+          projectRootFile = "flake.nix";
+
+          programs.ormolu.enable = true;
+          programs.nixpkgs-fmt.enable = true;
+          programs.cabal-fmt.enable = true;
+          programs.hlint.enable = true;
+
+          # We use fourmolu
+          programs.ormolu.package = pkgs.haskellPackages.fourmolu;
+          settings.formatter.ormolu = {
+            options = [
+              "--ghc-opt"
+              "-XImportQualifiedPost"
+            ];
+          };
+        };
+
+        # Default package & app.
+        packages.default = self'.packages.commonmark-simple;
+
+        # Default shell.
+        devShells.default = pkgs.mkShell {
+          name = "commonmark-simple";
+          inputsFrom = [
+            config.haskellProjects.default.outputs.devShell
+            config.treefmt.build.devShell
+          ];
+          nativeBuildInputs = with pkgs; [
+            just
+          ];
+        };
+      };
+    };
 }
