@@ -61,6 +61,7 @@ type SyntaxSpec' m il bl =
     , CE.HasDiv bl
     , CE.HasQuoted il
     , CE.HasSpan il
+    , CE.HasAlerts il bl
     )
 
 -- | GFM + official commonmark extensions
