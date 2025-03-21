@@ -9,10 +9,12 @@ category:           Text
 
 -- TODO: Before hackage release.
 -- A short (one-line) description of the package.
-synopsis:           Simple interface to commonmark-hs
+synopsis:
+  Simple interface to commonmark-hs for parsing real-world Markdown.
 
 -- A longer description of the package.
-description:        Simple interface to parsing Markdown using commonmark-hs
+description:
+  Simple interface to parsing real-world Markdown using commonmark-hs
 
 -- A URL where users can report bugs.
 bug-reports:        https://github.com/srid/commonmark-simple

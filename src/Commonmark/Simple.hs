@@ -1,3 +1,7 @@
+{- | A simple interface to the `commonmark` package for parsing real-world Markdown
+
+Where 'real-world' means the kind of syntax used in the likes of Obsidian Markdown.
+-}
 module Commonmark.Simple (
     parseMarkdownWithFrontMatter,
     parseMarkdown,
@@ -16,7 +20,7 @@ import Text.Megaparsec.Char qualified as M
 import Text.Pandoc.Builder qualified as B
 import Text.Pandoc.Definition (Pandoc (..))
 
--- | Parse a Markdown file using commonmark-hs with all extensions enabled
+-- | Like `parseMarkdown` but also parses the YAML frontmatter
 parseMarkdownWithFrontMatter ::
     forall meta m il bl.
     ( FromJSON meta
@@ -37,6 +41,7 @@ parseMarkdownWithFrontMatter spec fn s = do
     let doc = Pandoc mempty $ B.toList . CP.unCm @() @B.Blocks $ blocks
     pure (mMetaVal, doc)
 
+-- | Parse a Markdown file using commonmark-hs with all extensions enabled
 parseMarkdown :: FilePath -> Text -> Either Text Pandoc
 parseMarkdown fn s = do
     cmBlocks <- first show $ join $ CM.commonmarkWith @(Either CM.ParseError) fullMarkdownSpec fn s
