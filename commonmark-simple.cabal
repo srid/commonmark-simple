@@ -1,6 +1,6 @@
 cabal-version:      2.4
 name:               commonmark-simple
-version:            0.2.0.0
+version:            0.2.1.0
 license:            MIT
 copyright:          2022 Sridhar Ratnakumar
 maintainer:         srid@srid.ca
@@ -22,22 +22,7 @@ extra-source-files:
   LICENSE
   README.md
 
-library
-  build-depends:
-    , aeson
-    , base                   >=4.13.0.0 && <5
-    , commonmark
-    , commonmark-extensions  >=0.2.5
-    , commonmark-pandoc      >=0.2.2
-    , containers
-    , megaparsec
-    , pandoc-types
-    , parsec
-    , parser-combinators
-    , relude
-    , yaml
-
-  exposed-modules:    Commonmark.Simple
+common shared
   mixins:
     base hiding (Prelude),
     relude (Relude as Prelude, Relude.Container.One),
@@ -89,5 +74,36 @@ library
     TypeOperators
     ViewPatterns
 
-  hs-source-dirs:     src
   default-language:   Haskell2010
+
+library
+  import:             shared
+  build-depends:
+    , aeson
+    , base                   >=4.13.0.0 && <5
+    , commonmark
+    , commonmark-extensions  >=0.2.5
+    , commonmark-pandoc      >=0.2.2
+    , containers
+    , megaparsec
+    , pandoc-types
+    , parsec
+    , parser-combinators
+    , relude
+    , yaml
+
+  exposed-modules:    Commonmark.Simple
+  hs-source-dirs:     src
+
+test-suite test
+  import:             shared
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     test
+  main-is:            Spec.hs
+  other-modules:      Commonmark.SimpleSpec
+  build-depends:
+    , base
+    , commonmark-simple
+    , hspec
+    , pandoc-types
+    , relude

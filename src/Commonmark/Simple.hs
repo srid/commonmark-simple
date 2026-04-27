@@ -6,6 +6,7 @@ module Commonmark.Simple (
     parseMarkdownWithFrontMatter,
     parseMarkdown,
     fullMarkdownSpec,
+    flattenNestedLinks,
 )
 where
 
@@ -18,7 +19,8 @@ import Data.Yaml qualified as Y
 import Text.Megaparsec qualified as M
 import Text.Megaparsec.Char qualified as M
 import Text.Pandoc.Builder qualified as B
-import Text.Pandoc.Definition (Pandoc (..))
+import Text.Pandoc.Definition (Inline (..), Pandoc (..))
+import Text.Pandoc.Walk qualified as W
 
 -- | Like `parseMarkdown` but also parses the YAML frontmatter
 parseMarkdownWithFrontMatter ::
@@ -39,14 +41,39 @@ parseMarkdownWithFrontMatter spec fn s = do
     mMetaVal <- first show $ (Y.decodeEither' . encodeUtf8) `traverse` mMeta
     blocks <- first show $ join $ CM.commonmarkWith @(Either CM.ParseError) spec fn markdown
     let doc = Pandoc mempty $ B.toList . CP.unCm @() @B.Blocks $ blocks
-    pure (mMetaVal, doc)
+    pure (mMetaVal, flattenNestedLinks doc)
 
 -- | Parse a Markdown file using commonmark-hs with all extensions enabled
 parseMarkdown :: FilePath -> Text -> Either Text Pandoc
 parseMarkdown fn s = do
     cmBlocks <- first show $ join $ CM.commonmarkWith @(Either CM.ParseError) fullMarkdownSpec fn s
     let blocks = B.toList . CP.unCm @() @B.Blocks $ cmBlocks
-    pure $ Pandoc mempty blocks
+    pure $ flattenNestedLinks $ Pandoc mempty blocks
+
+{- | Replace nested @Link@ nodes inside any @Link@'s label with the inner label
+content, dropping the inner link's target.
+
+The @autolink@ extension in @commonmark-hs@ greedily turns bare URLs and email
+addresses into autolinks even when they appear inside another link's label.
+Once translated to Pandoc, this surfaces as a nested @Link@ — for example,
+@[https:\/\/x.com](https:\/\/x.com#a)@ becomes
+@Link [Link [Str "https:\/\/x.com"] (...)] (..., "https:\/\/x.com#a")@,
+which Pandoc renderers split into two separate hyperlinks.
+
+Flattening normalizes the AST so the inner label survives but the inner link
+target is discarded — a single hyperlink, as the author wrote. @Image@ children
+are left intact (an image inside a link is a clickable image, not a parser
+artifact).
+
+See <https:\/\/github.com\/srid\/emanote\/issues\/349>.
+-}
+flattenNestedLinks :: (W.Walkable Inline a) => a -> a
+flattenNestedLinks = W.walk $ \case
+    Link attr inlines target -> Link attr (concatMap unwrap inlines) target
+    x -> x
+  where
+    unwrap (Link _ inner _) = inner
+    unwrap x = [x]
 
 type SyntaxSpec' m il bl =
     ( Monad m
