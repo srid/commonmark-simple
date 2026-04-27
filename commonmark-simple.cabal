@@ -77,7 +77,7 @@ common shared
   default-language:   Haskell2010
 
 library
-  import:             shared
+  import:          shared
   build-depends:
     , aeson
     , base                   >=4.13.0.0 && <5
@@ -92,15 +92,15 @@ library
     , relude
     , yaml
 
-  exposed-modules:    Commonmark.Simple
-  hs-source-dirs:     src
+  exposed-modules: Commonmark.Simple
+  hs-source-dirs:  src
 
 test-suite test
-  import:             shared
-  type:               exitcode-stdio-1.0
-  hs-source-dirs:     test
-  main-is:            Spec.hs
-  other-modules:      Commonmark.SimpleSpec
+  import:         shared
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Spec.hs
+  other-modules:  Commonmark.SimpleSpec
   build-depends:
     , base
     , commonmark-simple

@@ -24,8 +24,9 @@ spec = do
             links "<https://www.example.com>"
                 `shouldBe` [("https://www.example.com", "https://www.example.com")]
 
--- | Every @Link@ in the document, paired with its target URL and the plain
--- text of its label.
+{- | Every @Link@ in the document, paired with its target URL and the plain
+text of its label.
+-}
 links :: Text -> [(Text, Text)]
 links = either error collect . parseMarkdown "<test>"
   where
