@@ -6,7 +6,6 @@ module Commonmark.Simple (
     parseMarkdownWithFrontMatter,
     parseMarkdown,
     fullMarkdownSpec,
-    flattenNestedLinks,
 )
 where
 
