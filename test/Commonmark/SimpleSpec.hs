@@ -23,6 +23,12 @@ spec = do
         it "leaves a bare autolink alone (it is not nested)" $
             links "<https://www.example.com>"
                 `shouldBe` [("https://www.example.com", "https://www.example.com")]
+        it "flattens an autolink wrapped in emphasis inside a label" $
+            links "[**https://www.example.com**](http://target.com)"
+                `shouldBe` [("http://target.com", "https://www.example.com")]
+        it "flattens an autolink wrapped in italics inside a label" $
+            links "[*https://www.example.com*](http://target.com)"
+                `shouldBe` [("http://target.com", "https://www.example.com")]
 
 {- | Every @Link@ in the document, paired with its target URL and the plain
 text of its label.

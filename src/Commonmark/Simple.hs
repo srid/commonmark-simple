@@ -57,22 +57,27 @@ addresses into autolinks even when they appear inside another link's label.
 Once translated to Pandoc, this surfaces as a nested @Link@ — for example,
 @[https:\/\/x.com](https:\/\/x.com#a)@ becomes
 @Link [Link [Str "https:\/\/x.com"] (...)] (..., "https:\/\/x.com#a")@,
-which Pandoc renderers split into two separate hyperlinks.
+which Pandoc renderers split into two separate hyperlinks. The same artifact
+appears at deeper positions when the autolink fires inside an emphasis-like
+container (@Strong@, @Emph@, @Span@, …) inside a parent link's label.
 
-Flattening normalizes the AST so the inner label survives but the inner link
-target is discarded — a single hyperlink, as the author wrote. @Image@ children
-are left intact (an image inside a link is a clickable image, not a parser
-artifact).
+Flattening normalizes the AST so the inner label survives but every inner
+link's target is discarded, at any depth — a single hyperlink, as the author
+wrote. Non-link container inlines (@Strong@, @Emph@, @Span@, …) and @Image@
+children are left intact (an image inside a link is a clickable image, not a
+parser artifact).
 
 See <https:\/\/github.com\/srid\/emanote\/issues\/349>.
 -}
 flattenNestedLinks :: (W.Walkable Inline a) => a -> a
 flattenNestedLinks = W.walk $ \case
-    Link attr inlines target -> Link attr (concatMap unwrap inlines) target
+    Link attr inlines target -> Link attr (W.walk dropLinks inlines) target
     x -> x
   where
-    unwrap (Link _ inner _) = inner
-    unwrap x = [x]
+    dropLinks :: [Inline] -> [Inline]
+    dropLinks = concatMap $ \case
+        Link _ inner _ -> inner
+        x -> [x]
 
 type SyntaxSpec' m il bl =
     ( Monad m
